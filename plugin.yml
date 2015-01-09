@@ -1,0 +1,5 @@
+name: attaque_defense
+main: fr.alexmarsu.attaqueDefense.Main
+version: 0.1
+commands:
+  positionDrapeau:
