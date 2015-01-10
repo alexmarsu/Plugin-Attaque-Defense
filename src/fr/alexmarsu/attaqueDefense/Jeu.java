@@ -40,6 +40,14 @@ public class Jeu {
 		this.equipes = equipes;
 	}
 	
+	private Equipe equipeOpposee(Equipe equipe){
+		if(getEquipes()[0] == equipe){
+			return getEquipes()[1];
+		}else{
+			return getEquipes()[0];
+		}
+	}
+	
 	public boolean addPlayer(Player player){
 		if(!this.getListPlayer().contains(player)){
 			this.getListPlayer().add(player);
@@ -68,6 +76,11 @@ public class Jeu {
 			serv.getConsoleSender().sendMessage("/title "+p.getName()+" title {\"text\":\"\",\"extra\":[{\"text\":\"Vous êtes attaquant !\",\"color\":\"red\",\"bold\":\"true\"}]}");
 			serv.getConsoleSender().sendMessage("/title "+p.getName()+" subtitle {\"text\":\"\",\"extra\":[{\"text\":\"Ramenez le drapeau énemis dans la base\",\"color\":\"green\",\"bold\":\"true\"}]}");
 		}
+		for(Player p:equipeOpposee(attaquant).getListPlayer()){
+			serv.getConsoleSender().sendMessage("/title "+p.getName()+" title {\"text\":\"\",\"extra\":[{\"text\":\"Vous êtes défenseur !\",\"color\":\"red\",\"bold\":\"true\"}]}");
+			serv.getConsoleSender().sendMessage("/title "+p.getName()+" subtitle {\"text\":\"\",\"extra\":[{\"text\":\"Protégez le drapeau\",\"color\":\"green\",\"bold\":\"true\"}]}");
+		}
+		
 	}
 
 	private Main getMain() {
