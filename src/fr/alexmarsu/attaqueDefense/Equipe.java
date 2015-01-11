@@ -9,12 +9,14 @@ public class Equipe {
 
 	private ArrayList<Player> listPlayer;
 	private String name;
-	private ChatColor color;	
+	private ChatColor color;
+	private boolean attaquant;
 
 	public Equipe(String name, ChatColor color) {
 		this.setColor(color);
 		this.setName(name);
 		this.setListPlayer(new ArrayList<Player>());
+		this.setAttaquant(false);
 	}
 
 	public ArrayList<Player> getListPlayer() {
@@ -43,5 +45,13 @@ public class Equipe {
 	
 	public void addPlayer(Player player){
 		this.getListPlayer().add(player);
+	}
+
+	public boolean isAttaquant() {
+		return attaquant;
+	}
+
+	public void setAttaquant(boolean attaquant) {
+		this.attaquant = attaquant;
 	}
 }

@@ -5,3 +5,4 @@ commands:
   positionDrapeau:
   setSpawnAttaque:
   setSpawnDefense:
+  testAQ:

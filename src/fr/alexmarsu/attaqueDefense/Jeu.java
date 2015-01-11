@@ -67,7 +67,7 @@ public class Jeu {
 		}
 		this.getEquipes()[1].setListPlayer(this.getListPlayer());
 		
-		this.demarerRound(getEquipes()[0]);
+		this.demarerRound(getEquipes()[0],getEquipes()[1]);
 	}
 
 	private void afficherTitres(Equipe attaquant) {
@@ -91,8 +91,9 @@ public class Jeu {
 		this.main = main;
 	}
 	
-	public void demarerRound(Equipe attaquant){
+	public void demarerRound(Equipe attaquant, Equipe defenseur){
+		attaquant.setAttaquant(true);
+		defenseur.setAttaquant(false);
 		this.afficherTitres(attaquant);
-
 	}
 }

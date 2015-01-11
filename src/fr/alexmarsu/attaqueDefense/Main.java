@@ -3,9 +3,12 @@ package fr.alexmarsu.attaqueDefense;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import net.minecraft.server.v1_8_R1.Item;
 import net.minecraft.server.v1_8_R1.World;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -15,8 +18,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_8_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_8_R1.block.CraftBanner;
 import org.bukkit.craftbukkit.v1_8_R1.block.CraftBlockState;
+import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.material.Banner;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -27,12 +34,13 @@ public class Main extends JavaPlugin{
 	private Jeu jeu;
 	private Logger log;
 	private Config configuration;
-	
+	private PluginListener pl;
+	private Player joueurDrapeau;
+	private Drapeau drapeau;
+
 	@Override
 	public void onEnable(){
-		Listener l = new PluginListener(this);
-		PluginManager pm = getServer().getPluginManager();
-		pm.registerEvents(l, this);
+		this.setPl(new PluginListener(this));
 		this.setLog(getServer().getLogger());
 		this.setZone(new ZoneDeJeu());
 		this.setJeu(new Jeu(this));
@@ -74,7 +82,7 @@ public class Main extends JavaPlugin{
 			}else if(cmd.getName().equalsIgnoreCase("lancerAttaqueDefense")){
 				this.getJeu().lancerJeu();
 			}else if(cmd.getName().equalsIgnoreCase("testAQ")){
-				((Player) sender).teleport(getSpawnPoint("attaque", Integer.parseInt(args[0])));
+				((Damageable)((Player) sender)).setHealth(0);
 			}
 		}else{
 			sender.sendMessage("Cette commande doit être lancée par un joueur");
@@ -129,7 +137,7 @@ public class Main extends JavaPlugin{
 		return new Location(this.getServer().getWorld(this.getConfig().getString("drapeau.world")),
 				this.getConfig().getInt("drapeau.x"),
 				this.getConfig().getInt("drapeau.y"),
-				this.getConfig().getInt("drapeau.y"));
+				this.getConfig().getInt("drapeau.z"));
 		
 	}
 	
@@ -176,5 +184,107 @@ public class Main extends JavaPlugin{
 	public void setIndex(String s, int i){
 		getConfig().set("spawn."+s+".index",i);
 		saveConfig();
+	}
+	
+	public void bloquerJoueurs(){
+		getPl().setBlock(true);
+	}
+	
+	public void debloquerJoueurs(){
+		getPl().setBlock(false);
+	}
+
+	public PluginListener getPl() {
+		return pl;
+	}
+
+	public void setPl(PluginListener pl) {
+		PluginManager pm = getServer().getPluginManager();
+		pm.registerEvents(pl, this);
+		this.pl = pl;
+	}
+
+	public void prendLeDrapeau(Player player){
+		this.equiperDrapeau(player);
+		this.supprimerDrapeauPos();
+		if(this.getEquipe(player).isAttaquant()){
+			afficherPriseDrapeau(player);
+			this.equiperDrapeau(player);
+			this.supprimerDrapeauPos();
+			this.setJoueurDrapeau(player);
+		}
+	}
+	
+	private void afficherPriseDrapeau(Player player) {
+				
+	}
+
+	public Equipe getEquipe(Player player){
+		Equipe[] e = this.getJeu().getEquipes();
+		if(e[0].getListPlayer().contains(player)){
+			return e[0];
+		}else{
+			return e[1];
+		}
+	}
+	
+	public void equiperDrapeau(Player player){
+		player.getInventory().setHelmet(this.getDrapeau().getItem());
+	}
+	
+	public void supprimerDrapeauPos(){
+		this.getFlagSpawnPoint().getBlock().setType(Material.AIR);
+	}
+	
+	public void ajouterDrapeauPos(Player player){
+		ItemStack item = player.getInventory().getHelmet();
+		BannerMeta meta = (BannerMeta) item.getItemMeta();
+		Block b = this.getFlagSpawnPoint().getBlock();
+		b.setTypeIdAndData(Material.STANDING_BANNER.getId(),getDataFlag(),true);
+		CraftBanner banner = new CraftBanner(b);
+		banner.setBaseColor(meta.getBaseColor());
+		banner.setPatterns(meta.getPatterns());
+		banner.update();
+	}
+
+	public Player getJoueurDrapeau() {
+		return joueurDrapeau;
+	}
+
+	public void setJoueurDrapeau(Player joueurDrapeau) {
+		this.joueurDrapeau = joueurDrapeau;
+	}
+
+	public void afficherDrapeauPerdu() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void perdLeDrapeau(Player player) {
+		this.afficherDrapeauPerdu();
+		this.ajouterDrapeauPos(player);
+	}
+	
+	private void initDrapeau(){
+		if(getFlagSpawnPoint().getBlock().getType() != Material.STANDING_BANNER){
+			getLog().info("Erreur : Aucun drapeau trouvé");
+		}else{
+			Block b = getFlagSpawnPoint().getBlock();
+			CraftBanner banner = new CraftBanner(b);
+			ItemStack item = new ItemStack(Material.BANNER);
+			BannerMeta meta = (BannerMeta)item.getItemMeta();
+			meta.setBaseColor(banner.getBaseColor());
+			meta.setPatterns(banner.getPatterns());
+			item.setItemMeta(meta);
+			this.setDrapeau(new Drapeau(item,meta,b));
+		}
+	}
+
+	public Drapeau getDrapeau() {
+		return drapeau;
+	}
+
+	public void setDrapeau(Drapeau drapeau) {
+		this.drapeau = drapeau;
 	}
 }
