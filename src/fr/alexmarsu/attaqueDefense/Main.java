@@ -45,6 +45,7 @@ public class Main extends JavaPlugin{
 		this.setZone(new ZoneDeJeu());
 		this.setJeu(new Jeu(this));
 		this.setConfiguration(new Config(this));
+		this.initDrapeau();
 		if(getConfig() == null){
 			this.saveConfig();
 		}
@@ -60,7 +61,8 @@ public class Main extends JavaPlugin{
 			if (cmd.getName().equalsIgnoreCase("positionDrapeau")) {
 				Player pl = (Player) sender;
 				Location loc = pl.getLocation();
-				addFlagSpawnPoint(pl);
+				addFlagSpawnPoint(loc);
+				initDrapeau();
 				return true;
 			}else if(cmd.getName().equalsIgnoreCase("setSpawnAttaque")){
 				Player pl = (Player) sender;
@@ -81,8 +83,16 @@ public class Main extends JavaPlugin{
 				}
 			}else if(cmd.getName().equalsIgnoreCase("lancerAttaqueDefense")){
 				this.getJeu().lancerJeu();
+			}else if(cmd.getName().equalsIgnoreCase("positionBase")){
+				Player pl = (Player) sender;
+				if(args[0].equals("1")|| args[0].equals("2")){
+					pl.sendMessage("test");
+					this.addPositionBase(Integer.parseInt(args[0]), pl.getLocation());
+				}
 			}else if(cmd.getName().equalsIgnoreCase("testAQ")){
-				((Damageable)((Player) sender)).setHealth(0);
+				sender.sendMessage(Integer.toString(getConfiguration().getTemps()));
+				this.getJeu().addPlayer((Player) sender);
+				this.getJeu().demarerTimer(this.getConfiguration().getTemps());
 			}
 		}else{
 			sender.sendMessage("Cette commande doit être lancée par un joueur");
@@ -125,12 +135,27 @@ public class Main extends JavaPlugin{
 		this.configuration = configuration;
 	}
 	
-	public void addFlagSpawnPoint(Player player){
-		getConfig().set("drapeau.x", player.getLocation().getBlockX());
-		getConfig().set("drapeau.y", player.getLocation().getBlockY());
-		getConfig().set("drapeau.z", player.getLocation().getBlockZ());
-		getConfig().set("drapeau.world", player.getWorld().getName());
+	public void addFlagSpawnPoint(Location loc){
+		getConfig().set("drapeau.x", loc.getBlockX());
+		getConfig().set("drapeau.y", loc.getBlockY());
+		getConfig().set("drapeau.z", loc.getBlockZ());
+		getConfig().set("drapeau.world", loc.getWorld().getName());
 		saveConfig();
+	}
+	
+	public void addPositionBase(int i,Location loc){
+		getConfig().set("base."+i+".x", loc.getBlockX());
+		getConfig().set("base."+i+".y", loc.getBlockY());
+		getConfig().set("base."+i+".z", loc.getBlockZ());
+		getConfig().set("base."+i+".world", loc.getWorld().getName());
+		saveConfig();
+	}
+	
+	public Location getPositionBase(int i){
+		return new Location(this.getServer().getWorld(this.getConfig().getString("base."+i+".world")),
+				getConfig().getInt("base."+i+".x"),
+				getConfig().getInt("base."+i+".y"),
+				getConfig().getInt("base."+i+".z"));
 	}
 	
 	public Location getFlagSpawnPoint(){
@@ -207,6 +232,7 @@ public class Main extends JavaPlugin{
 	public void prendLeDrapeau(Player player){
 		this.equiperDrapeau(player);
 		this.supprimerDrapeauPos();
+		this.setJoueurDrapeau(player);
 		if(this.getEquipe(player).isAttaquant()){
 			afficherPriseDrapeau(player);
 			this.equiperDrapeau(player);
@@ -236,15 +262,8 @@ public class Main extends JavaPlugin{
 		this.getFlagSpawnPoint().getBlock().setType(Material.AIR);
 	}
 	
-	public void ajouterDrapeauPos(Player player){
-		ItemStack item = player.getInventory().getHelmet();
-		BannerMeta meta = (BannerMeta) item.getItemMeta();
-		Block b = this.getFlagSpawnPoint().getBlock();
-		b.setTypeIdAndData(Material.STANDING_BANNER.getId(),getDataFlag(),true);
-		CraftBanner banner = new CraftBanner(b);
-		banner.setBaseColor(meta.getBaseColor());
-		banner.setPatterns(meta.getPatterns());
-		banner.update();
+	public void ajouterDrapeauPos(){
+		this.getDrapeau().placerDrapeau(this.getFlagSpawnPoint());
 	}
 
 	public Player getJoueurDrapeau() {
@@ -262,7 +281,7 @@ public class Main extends JavaPlugin{
 
 	public void perdLeDrapeau(Player player) {
 		this.afficherDrapeauPerdu();
-		this.ajouterDrapeauPos(player);
+		this.ajouterDrapeauPos();
 	}
 	
 	private void initDrapeau(){
@@ -270,13 +289,14 @@ public class Main extends JavaPlugin{
 			getLog().info("Erreur : Aucun drapeau trouvé");
 		}else{
 			Block b = getFlagSpawnPoint().getBlock();
+			System.out.println(Byte.toString(b.getData()));
 			CraftBanner banner = new CraftBanner(b);
 			ItemStack item = new ItemStack(Material.BANNER);
 			BannerMeta meta = (BannerMeta)item.getItemMeta();
 			meta.setBaseColor(banner.getBaseColor());
 			meta.setPatterns(banner.getPatterns());
 			item.setItemMeta(meta);
-			this.setDrapeau(new Drapeau(item,meta,b));
+			this.setDrapeau(new Drapeau(item,meta,b,b.getData()));
 		}
 	}
 

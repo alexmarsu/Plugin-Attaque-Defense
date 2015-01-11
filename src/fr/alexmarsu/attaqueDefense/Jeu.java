@@ -3,20 +3,31 @@ package fr.alexmarsu.attaqueDefense;
 import java.util.ArrayList;
 import java.util.Random;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.ScoreboardManager;
 
 public class Jeu {
 	
 	private ArrayList<Player> listPlayer;
 	private Equipe[] equipes;
 	private Main main;
+	private Scoreboard scoreboard;
+	private int indexMinutes;
+	private int taskID;
 	
 	public Jeu(Main main){
 		this.setMain(main);
 		this.setListPlayer(new ArrayList<Player>());
 		this.initEquipes();
+		this.initScoreBoard();
+		this.setIndexMinutes(0);
 	}
 	
 	private void initEquipes(){
@@ -95,5 +106,58 @@ public class Jeu {
 		attaquant.setAttaquant(true);
 		defenseur.setAttaquant(false);
 		this.afficherTitres(attaquant);
+	}
+	
+	public void demarerTimer(int temps){
+		this.setTaskID(Bukkit.getScheduler().scheduleSyncRepeatingTask(main, new TimerRun(temps, this),0L, 20L));
+	}
+	
+	public void initScoreBoard(){
+		ScoreboardManager manager = Bukkit.getScoreboardManager();
+		Scoreboard sc = manager.getNewScoreboard();
+		Objective obj = sc.registerNewObjective(ChatColor.GREEN+"Temps :", "dummy");
+		obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+		this.setScoreboard(sc);
+	}
+	
+	public void afficherScoreBoard(Player p){
+		p.setScoreboard(this.getScoreboard());
+	}
+
+	public Scoreboard getScoreboard() {
+		return scoreboard;
+	}
+
+	public void setScoreboard(Scoreboard scoreboard) {
+		this.scoreboard = scoreboard;
+	}
+
+	public void setTempsScoreBoard(int temps) {
+		this.getScoreboard().resetScores(ChatColor.RED+""+getIndexMinutes()+" minutes");
+		this.setIndexMinutes((int)Math.floor(temps/60));
+		this.getScoreboard().getObjective(ChatColor.GREEN+"Temps :").getScore(ChatColor.RED+""+getIndexMinutes()+" minutes").setScore(temps%60);
+	}
+
+	public int getIndexMinutes() {
+		return indexMinutes;
+	}
+
+	public void setIndexMinutes(int indexMinutes) {
+		this.indexMinutes = indexMinutes;
+	}
+
+	public int getTaskID() {
+		return taskID;
+	}
+
+	public void setTaskID(int taskID) {
+		this.taskID = taskID;
+	}
+
+	public void finTimer() {
+		Bukkit.getScheduler().cancelTask(getTaskID());
+		for(Player p:getListPlayer()){
+			p.getScoreboard().clearSlot(DisplaySlot.SIDEBAR);;
+		}
 	}
 }

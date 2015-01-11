@@ -6,3 +6,4 @@ commands:
   setSpawnAttaque:
   setSpawnDefense:
   testAQ:
+  positionBase:

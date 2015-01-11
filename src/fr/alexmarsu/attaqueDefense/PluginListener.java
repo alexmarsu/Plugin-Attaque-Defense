@@ -60,23 +60,31 @@ public class PluginListener implements Listener{
 			if(loc.getX()!=e.getTo().getX() || loc.getY()!=e.getTo().getY() || loc.getZ()!=e.getTo().getZ()){
 				e.getPlayer().teleport(e.getPlayer().getLocation());
 			}
+		}else{
+			Location loc1 = main.getPositionBase(1);
+			Location loc2 = main.getPositionBase(2);
+			Location locp = e.getPlayer().getLocation();
+			Location tmp;
+			if(((loc1.getBlockX() <= loc2.getBlockX() && (
+					(locp.getBlockX() >= loc1.getBlockX() &&  locp.getBlockX() <= loc2.getBlockX()) &&
+					(locp.getBlockZ() >= loc1.getBlockZ() &&  locp.getBlockZ() <= loc2.getBlockZ()))) ||
+					(loc1.getBlockX() >= loc2.getBlockX() && (
+							(locp.getBlockX() >= loc2.getBlockX() &&  locp.getBlockX() <= loc1.getBlockX()) &&
+							(locp.getBlockZ() >= loc2.getBlockZ() &&  locp.getBlockZ() <= loc1.getBlockZ())))) && loc1.getBlockY() == locp.getBlockY()){
+				e.getPlayer().sendMessage("test");
+			}
+
+		
+			
 		}
 	}
 	
 	@EventHandler
-	public void playerDeathEvent(EntityDamageEvent e){
-		if(e.getEntity() instanceof Player){
-			Player p = (Player) e.getEntity();
-			p.sendMessage(p.getInventory().getHelmet().toString());
-			if(((Damageable)p).getHealth()<= e.getFinalDamage()){
-				p.sendMessage(p.getInventory().getHelmet().toString());
-				main.perdLeDrapeau(p);
-				if(p == main.getJoueurDrapeau()){
-					main.perdLeDrapeau(p);
-				}
-			}
+	public void PlayerDeathEvent(PlayerDeathEvent e){
+		if(e.getEntity() == main.getJoueurDrapeau()){
+			main.perdLeDrapeau(e.getEntity());
+			e.getEntity().sendMessage("Vous perdez le drapeau");
 		}
-		
 	}
 	
 	@EventHandler
